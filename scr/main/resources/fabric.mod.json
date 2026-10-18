@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "minecraftmessenger",
+  "version": "${version}",
+  "name": "Minecraft Messenger",
+  "description": "Standalone Minecraft messenger with friends and private chats.",
+  "authors": [
+    "MinecraftMessenger"
+  ],
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.minecraftmessenger.MinecraftMessengerClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
