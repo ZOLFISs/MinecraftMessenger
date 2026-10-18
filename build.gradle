@@ -19,16 +19,11 @@ repositories {
 dependencies {
     minecraft("com.mojang:minecraft:${project.minecraft_version}")
 
-    def yarnGroup = "net.fabricmc"
-    def yarnArtifact = "yarn"
-    def yarnVersion = "1.21.1+build.3"
-    def yarnClassifier = "v2"
-
     mappings(
-        group: yarnGroup,
-        name: yarnArtifact,
-        version: yarnVersion,
-        classifier: yarnClassifier
+        group: "net.fabricmc",
+        name: "yarn",
+        version: "1.21.1+build.3",
+        classifier: "v2"
     )
 
     modImplementation(
@@ -44,5 +39,23 @@ dependencies {
     )
 
     implementation("com.google.code.gson:gson:2.11.0")
-    include("com.google.code.gson:gson:2.11.0")
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = "UTF-8"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withSourcesJar()
 }
