@@ -33,17 +33,18 @@ public class MinecraftMessengerClient implements ClientModInitializer {
     }
 
     private static void openMessenger(MinecraftClient client) {
-        if (client == null || client.player == null) {
+        if (client == null) {
             return;
         }
 
         Screen currentScreen = client.currentScreen;
 
-        if (currentScreen instanceof MessengerScreen) {
+        if (currentScreen instanceof LoginScreen
+                || currentScreen instanceof MessengerScreen) {
             client.setScreen(null);
             return;
         }
 
-        client.setScreen(new MessengerScreen(currentScreen));
+        client.setScreen(new LoginScreen(currentScreen));
     }
 }
