@@ -12,12 +12,13 @@ import java.util.List;
 public class MessengerScreen extends Screen {
 
 private final Screen parent;
-private TextFieldWidget messageInput;
-private TextFieldWidget friendInput;
+private final FirebaseClient.AuthResult account;
 
+private TextFieldWidget messageInput;
 private final List<String> messages = new ArrayList<>();
+
 private String selectedFriend = "Общий чат";
-private String status = "Не подключено к Firebase";
+private String status = "Аккаунт авторизован";
 
 private int panelLeft;
 private int panelTop;
@@ -25,16 +26,24 @@ private int panelWidth;
 private int panelHeight;
 
 public MessengerScreen(Screen parent) {
+this(parent, null);
+}
+
+public MessengerScreen(
+Screen parent,
+FirebaseClient.AuthResult account
+) {
 super(Text.literal("Minecraft Messenger"));
 this.parent = parent;
+this.account = account;
 }
 
 @Override
 protected void init() {
-panelWidth = Math.min(760, this.width - 32);
-panelHeight = Math.min(440, this.height - 32);
-panelLeft = (this.width - panelWidth) / 2;
-panelTop = (this.height - panelHeight) / 2;
+panelWidth = Math.min(760, width - 32);
+panelHeight = Math.min(440, height - 32);
+panelLeft = (width - panelWidth) / 2;
+panelTop = (height - panelHeight) / 2;
 
 int sidebarWidth = Math.min(190, panelWidth / 3);
 int contentLeft = panelLeft + sidebarWidth + 16;
@@ -43,37 +52,22 @@ int contentWidth = panelWidth - sidebarWidth - 32;
 addDrawableChild(ButtonWidget.builder(
 Text.literal("← Назад"),
 button -> close()
-).dimensions(panelLeft + 10, panelTop + 10, 78, 20).build());
+).dimensions(
+panelLeft + 10, panelTop + 10, 78, 20
+).build());
 
 addDrawableChild(ButtonWidget.builder(
 Text.literal("Общий чат"),
 button -> {
 selectedFriend = "Общий чат";
 messages.clear();
-messages.add("Это демонстрационный чат.");
+messages.add("Добро пожаловать!");
+status = "Демонстрационный чат";
 }
-).dimensions(panelLeft + 10, panelTop + 70, sidebarWidth - 20, 24).build());
-
-friendInput = new TextFieldWidget(
-textRenderer,
-panelLeft + 10,
-panelTop + 42,
-sidebarWidth - 20,
-20,
-Text.literal("Имя друга")
-);
-friendInput.setPlaceholder(Text.literal("Найти друга..."));
-addDrawableChild(friendInput);
-
-addDrawableChild(ButtonWidget.builder(
-Text.literal("Найти"),
-button -> {
-String name = friendInput.getText().trim();
-if (!name.isEmpty()) {
-status = "Поиск Firebase ещё не подключён";
-}
-}
-).dimensions(panelLeft + 10, panelTop + 100, sidebarWidth - 20, 22).build());
+).dimensions(
+panelLeft + 10, panelTop + 70,
+sidebarWidth - 20, 24
+).build());
 
 messageInput = new TextFieldWidget(
 textRenderer,
@@ -83,8 +77,11 @@ Math.max(60, contentWidth - 76),
 24,
 Text.literal("Сообщение")
 );
+
 messageInput.setMaxLength(1000);
-messageInput.setPlaceholder(Text.literal("Напиши сообщение..."));
+messageInput.setPlaceholder(
+Text.literal("Напиши сообщение...")
+);
 addDrawableChild(messageInput);
 
 addDrawableChild(ButtonWidget.builder(
@@ -93,13 +90,16 @@ button -> sendMessage()
 ).dimensions(
 contentLeft + Math.max(60, contentWidth - 70),
 panelTop + panelHeight - 48,
-70,
-24
+70, 24
 ).build());
 
 messages.clear();
-messages.add("Добро пожаловать в Minecraft Messenger!");
-messages.add("Интерфейс создан. Firebase пока не подключён.");
+messages.add("Minecraft Messenger");
+messages.add(account == null
+? "Гостевой режим"
+: "Вы вошли как " + account.email());
+messages.add("Отправка сообщений через Firebase");
+messages.add("будет добавлена следующим этапом.");
 }
 
 private void sendMessage() {
@@ -115,6 +115,7 @@ return;
 
 messages.add("Вы: " + text);
 messageInput.setText("");
+status = "Сообщение сохранено только на этом экране";
 }
 
 @Override
@@ -127,16 +128,14 @@ float delta
 renderBackground(context, mouseX, mouseY, delta);
 
 context.fill(
-panelLeft,
-panelTop,
+panelLeft, panelTop,
 panelLeft + panelWidth,
 panelTop + panelHeight,
 0xF014151D
 );
 
 context.fill(
-panelLeft,
-panelTop,
+panelLeft, panelTop,
 panelLeft + panelWidth,
 panelTop + 3,
 0xFF9B59FF
@@ -145,8 +144,7 @@ panelTop + 3,
 int sidebarWidth = Math.min(190, panelWidth / 3);
 
 context.fill(
-panelLeft,
-panelTop + 36,
+panelLeft, panelTop + 36,
 panelLeft + sidebarWidth,
 panelTop + panelHeight,
 0xFF1B1C27
@@ -165,7 +163,7 @@ context.drawText(
 textRenderer,
 "ДРУЗЬЯ",
 panelLeft + 12,
-panelTop + 30,
+panelTop + 48,
 0xFFB8A6D9,
 false
 );
@@ -202,7 +200,10 @@ context.drawText(
 textRenderer,
 textRenderer.trimToWidth(
 message,
-Math.max(40, panelWidth - sidebarWidth - 40)
+Math.max(
+40,
+panelWidth - sidebarWidth - 40
+)
 ),
 contentLeft,
 messageY,
